@@ -6,7 +6,7 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
+//var mongoose = require('mongoose');
 
 
 var routes = require('./app/index');
@@ -27,7 +27,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
-
+/*
 //var configDB = require('./config/database.js');
 var configDB = '127.0.0.1:27017/' + process.env.OPENSHIFT_APP_NAME;
 // if OPENSHIFT env variables are present, use the available connection info:
@@ -51,6 +51,8 @@ db.on('error', function(error){
 });
 
 db.on('disconnected', connect);
+
+*/
 
 app.use('/', routes);
 
