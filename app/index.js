@@ -4,7 +4,51 @@ var Contacts       = require('../app/models/contacts');
 var nodemailer = require("nodemailer");
 var path = require('path'),
     fs = require('fs');
+var  mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL;
+var    mongoURLLabel = "";
 
+  if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
+  var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
+      mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
+      mongoPort = process.env[mongoServiceName + '_SERVICE_PORT'],
+      mongoDatabase = process.env[mongoServiceName + '_DATABASE'],
+      mongoPassword = process.env[mongoServiceName + '_PASSWORD']
+      mongoUser = process.env[mongoServiceName + '_USER'];
+
+  if (mongoHost && mongoPort && mongoDatabase) {
+    mongoURLLabel = mongoURL = 'mongodb://';
+    if (mongoUser && mongoPassword) {
+      mongoURL += mongoUser + ':' + mongoPassword + '@';
+    }
+    // Provide UI label that excludes user id and pw
+    mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
+    mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
+
+  }
+  }
+  var db = null,
+    dbDetails = new Object();
+
+  var initDb = function(callback) {
+  if (mongoURL == null) return;
+
+  var mongodb = require('mongodb');
+  if (mongodb == null) return;
+
+  mongodb.connect(mongoURL, function(err, conn) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    db = conn;
+    dbDetails.databaseName = db.databaseName;
+    dbDetails.url = mongoURLLabel;
+    dbDetails.type = 'MongoDB';
+
+    console.log('Connected to MongoDB at: %s', mongoURL);
+  });
+  };
 
 
 /* GET home page. */
@@ -58,16 +102,16 @@ router.post('/contact',function(request, response) {
     console.log(" value request.body.name",request.body.message);
 
     console.log("contacts details",JSON.stringify(contactsDetails)); */
-    
+
     contactsDetails.name    = request.body.name;
     contactsDetails.email   = request.body.email;
     contactsDetails.phoneno = request.body.phoneno;
     contactsDetails.subject = request.body.subject;
 
-    contactsDetails.message = request.body.message; 
+    contactsDetails.message = request.body.message;
      //UserQuery;
     contactsDetails.save(function (err) {
-      
+
     if (err) {
       return err;
     }
@@ -121,4 +165,3 @@ router.post('/contact',function(request, response) {
 
 
 module.exports = router;
-
